@@ -19,6 +19,15 @@
         .scanned-list { padding: 0; list-style: none; }
         .scanned-item { background: #f0f0f0; padding: 10px; border-radius: 6px; margin-top: 8px; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; }
         .remove-btn { color: red; font-weight: bold; padding: 5px 10px; }
+
+        /* Animation de flash vert */
+.flash-success {
+    animation: flash 0.4s;
+}
+@keyframes flash {
+    0% { background-color: rgba(0, 255, 0, 0.5); }
+    100% { background-color: transparent; }
+}
     </style>
 </head>
 <body>
@@ -60,30 +69,43 @@
         let scannedData = [];
 
         function startScan() {
-    // On vérifie d'abord si une caméra est disponible
-    Html5Qrcode.getCameras().then(cameras => {
-        if (cameras && cameras.length > 0) {
-            html5QrCode.start(
-                { facingMode: "environment" }, // Utilise la caméra arrière
-                {
-                    fps: 20,    // Augmente la vitesse de lecture
-                    qrbox: { width: 280, height: 280 }, // Zone de scan plus large
-                    aspectRatio: 1.0
-                },
-                (decodedText) => {
-                    console.log("Scan réussi : ", decodedText);
-                    processDecodedText(decodedText); // La fonction qui nettoie l'URL
-                    // Optionnel : faire vibrer le téléphone
-                    if (navigator.vibrate) navigator.vibrate(100);
-                },
-                (errorMessage) => {
-                    // On ne met rien ici pour éviter de polluer la console
+    html5QrCode.start(
+        { facingMode: "environment" }, 
+        { fps: 20, qrbox: { width: 250, height: 250 } },
+        (decodedText) => {
+            // 1. Animation visuelle (Flash)
+            document.body.classList.add('flash-success');
+            setTimeout(() => document.body.classList.remove('flash-success'), 400);
+
+            // 2. Vibration (sur Android)
+            if (navigator.vibrate) navigator.vibrate(100);
+
+            // 3. Traitement du texte
+            let displayValue = decodedText;
+            try {
+                // Si c'est ton URL spécifique avec "data="
+                if (decodedText.includes('data=')) {
+                    const urlObj = new URL(decodedText);
+                    const params = new URLSearchParams(urlObj.search);
+                    const rawData = params.get('data');
+                    const info = JSON.parse(decodeURIComponent(rawData));
+                    displayValue = `Coll: ${info.collecteId} | Equip: ${info.equipementId}`;
                 }
-            ).catch(err => alert("Erreur caméra : " + err));
-        } else {
-            alert("Aucune caméra détectée.");
-        }
-    }).catch(err => alert("Erreur accès caméras : " + err));
+            } catch (e) {
+                console.log("Scan standard détecté");
+            }
+
+            // 4. Ajout à la liste s'il n'y est pas déjà
+            if (!scannedData.includes(displayValue)) {
+                scannedData.push(displayValue);
+                updateUI();
+                // Petit feedback sonore optionnel (bip système si possible)
+            }
+        },
+        (errorMessage) => { /* On laisse vide pour la performance */ }
+    ).catch(err => {
+        alert("Erreur caméra : " + err);
+    });
 }
 
         function updateUI() {
