@@ -7,78 +7,120 @@
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
     <style>
-        :root { --trusk-blue: #00aaff; }
-        body { font-family: -apple-system, sans-serif; margin: 0; padding: 20px; background: #f9f9f9; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        h2 { color: #333; font-size: 1.2rem; margin-top: 0; }
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
-        .btn-primary { background: black; color: white; }
-        #signature-pad { border: 1px solid #ccc; width: 100%; height: 200px; border-radius: 8px; background: #fff; }
-        #reader { width: 100%; border-radius: 8px; overflow: hidden; }
-        .scanned-item { background: #eef; padding: 10px; border-radius: 5px; margin-top: 5px; list-style: none; display: flex; justify-content: space-between; }
+        body { font-family: -apple-system, sans-serif; margin: 0; padding: 15px; background: #f4f7f9; color: #333; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        h2 { font-size: 1.1rem; margin-top: 0; display: flex; align-items: center; gap: 10px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
+        .btn-black { background: black; color: white; margin-top: 10px; }
+        .btn-scan { background: #00aaff; color: white; margin-top: 10px; }
+        #signature-pad { border: 1px solid #eee; width: 100%; height: 180px; border-radius: 8px; background: #fafafa; }
+        #reader { width: 100%; border-radius: 12px; overflow: hidden; margin-top: 10px; }
+        .scanned-list { padding: 0; list-style: none; }
+        .scanned-item { background: #f0f0f0; padding: 10px; border-radius: 6px; margin-top: 8px; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; }
+        .remove-btn { color: red; font-weight: bold; padding: 5px 10px; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2>🚚 Émargement Départ</h2>
-        <input type="text" id="driverName" placeholder="Nom du chauffeur" style="width:90%; padding:10px; margin-bottom:10px; border:1px solid #ccc; border-radius:5px;">
-        <p>Signature :</p>
+        <h2>🚚 1. Émargement Départ</h2>
+        <input type="text" id="driverName" placeholder="Ton Prénom / Nom">
         <canvas id="signature-pad"></canvas>
-        <button class="btn btn-primary" style="margin-top:10px;" onclick="saveDeparture()">Valider le Départ</button>
+        <button class="btn btn-black" onclick="sendData('DEPART')">Valider le Départ</button>
     </div>
 
     <div class="card">
-        <h2>📦 Déchargement Ecosystem</h2>
+        <h2>📦 2. Déchargement Ecosystem</h2>
         <div id="reader"></div>
-        <button class="btn" style="background:#eee; margin-top:10px;" onclick="startScan()">Scanner un appareil</button>
-        <ul id="scannedList" style="padding:0;"></ul>
-        <button class="btn btn-primary" style="margin-top:10px;" onclick="saveUnloading()">Valider Déchargement</button>
+        <button class="btn btn-scan" onclick="startScan()">📷 Scanner un appareil</button>
+        <ul id="scannedList" class="scanned-list"></ul>
+        <button class="btn btn-black" id="btn-save-unload" style="display:none;" onclick="sendData('DECHARGEMENT')">Valider le Retour</button>
     </div>
 
     <script>
-        // Init Signature
-        const canvas = document.querySelector("canvas");
-        const signaturePad = new SignaturePad(canvas);
+        // CONFIGURATION
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx9eHiFeRMZ9Zh0fO63Kb3LmgQoDEpkw12kZGdxdIPRI6ozg4y12eKqs0TEJb13Bdl-/exec"; // <--- METS TON LIEN ICI
 
-        // Resize canvas pour le tactile
+        // INIT SIGNATURE
+        const canvas = document.getElementById("signature-pad");
+        const signaturePad = new SignaturePad(canvas);
         function resizeCanvas() {
             const ratio = Math.max(window.devicePixelRatio || 1, 1);
             canvas.width = canvas.offsetWidth * ratio;
             canvas.height = canvas.offsetHeight * ratio;
-            canvas.getContext("canvas").scale(ratio, ratio);
+            canvas.getContext("2d").scale(ratio, ratio);
             signaturePad.clear();
         }
         window.addEventListener("resize", resizeCanvas);
         resizeCanvas();
 
-        // Scan Logic
+        // SCAN LOGIC
         const html5QrCode = new Html5Qrcode("reader");
-        let scannedCodes = [];
+        let scannedData = [];
 
         function startScan() {
-            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
-                if(!scannedCodes.includes(text)) {
-                    scannedCodes.push(text);
-                    const li = document.createElement("li");
-                    li.className = "scanned-item";
-                    li.innerHTML = `<span>${text}</span> <span onclick="this.parentElement.remove()">❌</span>`;
-                    document.getElementById("scannedList").appendChild(li);
-                    alert("Appareil ajouté : " + text);
+            html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (decodedText) => {
+                try {
+                    const url = new URL(decodedText);
+                    const params = new URLSearchParams(url.search);
+                    const rawData = params.get('data');
+                    if (rawData) {
+                        const info = JSON.parse(decodeURIComponent(rawData));
+                        const entry = `Coll: ${info.collecteId} | Equip: ${info.equipementId}`;
+                        if(!scannedData.includes(entry)) {
+                            scannedData.push(entry);
+                            updateUI();
+                        }
+                    }
+                } catch (e) {
+                    // Si c'est un code classique
+                    if(!scannedData.includes(decodedText)) {
+                        scannedData.push(decodedText);
+                        updateUI();
+                    }
                 }
             });
         }
 
-        // Envoi des données (A connecter à Google Apps Script)
-        function saveDeparture() {
-            if (signaturePad.isEmpty()) return alert("Merci de signer");
-            const data = {
-                driver: document.getElementById("driverName").value,
-                signature: signaturePad.toDataURL(),
-                type: "DEPART"
+        function updateUI() {
+            const list = document.getElementById("scannedList");
+            list.innerHTML = "";
+            scannedData.forEach((code, index) => {
+                const li = document.createElement("li");
+                li.className = "scanned-item";
+                li.innerHTML = `<span>${code}</span><span class="remove-btn" onclick="removeItem(${index})">Suppr.</span>`;
+                list.appendChild(li);
+            });
+            document.getElementById("btn-save-unload").style.display = scannedData.length > 0 ? "block" : "none";
+        }
+
+        function removeItem(index) {
+            scannedData.splice(index, 1);
+            updateUI();
+        }
+
+        // ENVOI AU SHEET
+        function sendData(type) {
+            const driver = document.getElementById("driverName").value;
+            if(!driver) return alert("Indique ton nom");
+
+            const payload = {
+                type: type,
+                driver: driver,
+                scans: type === 'DECHARGEMENT' ? scannedData : [],
+                signature: type === 'DEPART' ? signaturePad.toDataURL() : ""
             };
-            console.log("Données à envoyer :", data);
-            alert("Départ enregistré ! (Connexion Sheets à venir)");
+
+            fetch(SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                body: JSON.stringify(payload)
+            }).then(() => {
+                alert("Validé avec succès !");
+                if(type === 'DEPART') signaturePad.clear();
+                if(type === 'DECHARGEMENT') { scannedData = []; updateUI(); html5QrCode.stop(); }
+            }).catch(err => alert("Erreur d'envoi. Vérifie ta connexion."));
         }
     </script>
 </body>
