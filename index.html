@@ -60,28 +60,31 @@
         let scannedData = [];
 
         function startScan() {
-            html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (decodedText) => {
-                try {
-                    const url = new URL(decodedText);
-                    const params = new URLSearchParams(url.search);
-                    const rawData = params.get('data');
-                    if (rawData) {
-                        const info = JSON.parse(decodeURIComponent(rawData));
-                        const entry = `Coll: ${info.collecteId} | Equip: ${info.equipementId}`;
-                        if(!scannedData.includes(entry)) {
-                            scannedData.push(entry);
-                            updateUI();
-                        }
-                    }
-                } catch (e) {
-                    // Si c'est un code classique
-                    if(!scannedData.includes(decodedText)) {
-                        scannedData.push(decodedText);
-                        updateUI();
-                    }
+    // On vérifie d'abord si une caméra est disponible
+    Html5Qrcode.getCameras().then(cameras => {
+        if (cameras && cameras.length > 0) {
+            html5QrCode.start(
+                { facingMode: "environment" }, // Utilise la caméra arrière
+                {
+                    fps: 20,    // Augmente la vitesse de lecture
+                    qrbox: { width: 280, height: 280 }, // Zone de scan plus large
+                    aspectRatio: 1.0
+                },
+                (decodedText) => {
+                    console.log("Scan réussi : ", decodedText);
+                    processDecodedText(decodedText); // La fonction qui nettoie l'URL
+                    // Optionnel : faire vibrer le téléphone
+                    if (navigator.vibrate) navigator.vibrate(100);
+                },
+                (errorMessage) => {
+                    // On ne met rien ici pour éviter de polluer la console
                 }
-            });
+            ).catch(err => alert("Erreur caméra : " + err));
+        } else {
+            alert("Aucune caméra détectée.");
         }
+    }).catch(err => alert("Erreur accès caméras : " + err));
+}
 
         function updateUI() {
             const list = document.getElementById("scannedList");
