@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trusk Validation - Iloé</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 20px; background: #f4f4f4; }
+        #reader { width: 100%; max-width: 500px; margin: auto; background: white; border-radius: 8px; }
+        .btn { padding: 15px 25px; font-size: 18px; cursor: pointer; background: #000; color: #fff; border: none; border-radius: 5px; margin-top: 20px; }
+        #result { margin-top: 20px; font-weight: bold; color: green; }
+    </style>
+</head>
+<body>
+
+    <h2>Validation Déchargement Ecosystem</h2>
+    <div id="reader"></div>
+    <div id="result">Appareils scannés : <ul id="list"></ul></div>
+    
+    <button class="btn" onclick="startScan()">Démarrer le Scan</button>
+
+    <script>
+        const html5QrCode = new Html5Qrcode("reader");
+        const list = document.getElementById('list');
+
+        function startScan() {
+            html5QrCode.start(
+                { facingMode: "environment" }, // Utilise la caméra arrière
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                (decodedText) => {
+                    // Action quand on scanne un code
+                    let li = document.createElement('li');
+                    li.innerText = decodedText;
+                    list.appendChild(li);
+                    // On peut ajouter un petit bip ou vibration ici
+                },
+                (errorMessage) => { /* Erreur de lecture classique */ }
+            ).catch((err) => { console.error("Caméra non accessible", err); });
+        }
+    </script>
+</body>
+</html>
