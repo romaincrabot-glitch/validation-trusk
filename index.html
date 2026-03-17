@@ -105,26 +105,33 @@
 
         // ENVOI AU SHEET
         function sendData(type) {
-            const driver = document.getElementById("driverName").value;
-            if(!driver) return alert("Indique ton nom");
+    const driver = document.getElementById("driverName").value;
+    if(!driver) return alert("Indique ton nom");
 
-            const payload = {
-                type: type,
-                driver: driver,
-                scans: type === 'DECHARGEMENT' ? scannedData : [],
-                signature: type === 'DEPART' ? signaturePad.toDataURL() : ""
-            };
+    // On prépare l'objet à envoyer
+    const payload = {
+        type: type,
+        driver: driver,
+        // Pour le déchargement, on transforme la liste en texte simple séparé par des virgules
+        scans: type === 'DECHARGEMENT' ? scannedData.join(", ") : "",
+        signature: type === 'DEPART' ? signaturePad.toDataURL() : ""
+    };
 
-            fetch(SCRIPT_URL, {
-                method: "POST",
-                mode: "no-cors",
-                body: JSON.stringify(payload)
-            }).then(() => {
-                alert("Validé avec succès !");
-                if(type === 'DEPART') signaturePad.clear();
-                if(type === 'DECHARGEMENT') { scannedData = []; updateUI(); html5QrCode.stop(); }
-            }).catch(err => alert("Erreur d'envoi. Vérifie ta connexion."));
+    fetch(SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors", 
+        body: JSON.stringify(payload)
+    }).then(() => {
+        alert("Validé avec succès !");
+        if(type === 'DEPART') signaturePad.clear();
+        if(type === 'DECHARGEMENT') { 
+            scannedData = []; 
+            updateUI(); 
+            // On peut arrêter la caméra après validation pour économiser la batterie
+            html5QrCode.stop().catch(() => {}); 
         }
+    }).catch(err => alert("Erreur d'envoi."));
+}
     </script>
 </body>
 </html>
