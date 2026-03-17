@@ -21,13 +21,13 @@
         .remove-btn { color: red; font-weight: bold; padding: 5px 10px; }
 
         /* Animation de flash vert */
-.flash-success {
-    animation: flash 0.4s;
-}
-@keyframes flash {
-    0% { background-color: rgba(0, 255, 0, 0.5); }
-    100% { background-color: transparent; }
-}
+        .flash-success {
+            animation: flash 0.4s;
+        }
+        @keyframes flash {
+            0% { background-color: rgba(0, 255, 0, 0.5); }
+            100% { background-color: transparent; }
+        }
     </style>
 </head>
 <body>
@@ -49,7 +49,7 @@
 
     <script>
         // CONFIGURATION
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx9eHiFeRMZ9Zh0fO63Kb3LmgQoDEpkw12kZGdxdIPRI6ozg4y12eKqs0TEJb13Bdl-/exec"; // <--- METS TON LIEN ICI
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx9eHiFeRMZ9Zh0fO63Kb3LmgQoDEpkw12kZGdxdIPRI6ozg4y12eKqs0TEJb13Bdl-/exec";
 
         // INIT SIGNATURE
         const canvas = document.getElementById("signature-pad");
@@ -69,44 +69,35 @@
         let scannedData = [];
 
         function startScan() {
-    html5QrCode.start(
-        { facingMode: "environment" }, 
-        { fps: 20, qrbox: { width: 250, height: 250 } },
-        (decodedText) => {
-            // 1. Animation visuelle (Flash)
-            document.body.classList.add('flash-success');
-            setTimeout(() => document.body.classList.remove('flash-success'), 400);
+            html5QrCode.start(
+                { facingMode: "environment" }, 
+                { fps: 20, qrbox: { width: 250, height: 250 } },
+                (decodedText) => {
+                    // Animation Flash
+                    document.body.classList.add('flash-success');
+                    setTimeout(() => document.body.classList.remove('flash-success'), 400);
 
-            // 2. Vibration (sur Android)
-            if (navigator.vibrate) navigator.vibrate(100);
+                    if (navigator.vibrate) navigator.vibrate(100);
 
-            // 3. Traitement du texte
-            let displayValue = decodedText;
-            try {
-                // Si c'est ton URL spécifique avec "data="
-                if (decodedText.includes('data=')) {
-                    const urlObj = new URL(decodedText);
-                    const params = new URLSearchParams(urlObj.search);
-                    const rawData = params.get('data');
-                    const info = JSON.parse(decodeURIComponent(rawData));
-                    displayValue = `Coll: ${info.collecteId} | Equip: ${info.equipementId}`;
-                }
-            } catch (e) {
-                console.log("Scan standard détecté");
-            }
+                    let displayValue = decodedText;
+                    try {
+                        if (decodedText.includes('data=')) {
+                            const urlObj = new URL(decodedText);
+                            const params = new URLSearchParams(urlObj.search);
+                            const rawData = params.get('data');
+                            const info = JSON.parse(decodeURIComponent(rawData));
+                            displayValue = `Coll: ${info.collecteId} | Equip: ${info.equipementId}`;
+                        }
+                    } catch (e) { console.log("Standard Scan"); }
 
-            // 4. Ajout à la liste s'il n'y est pas déjà
-            if (!scannedData.includes(displayValue)) {
-                scannedData.push(displayValue);
-                updateUI();
-                // Petit feedback sonore optionnel (bip système si possible)
-            }
-        },
-        (errorMessage) => { /* On laisse vide pour la performance */ }
-    ).catch(err => {
-        alert("Erreur caméra : " + err);
-    });
-}
+                    if (!scannedData.includes(displayValue)) {
+                        scannedData.push(displayValue);
+                        updateUI();
+                    }
+                },
+                (errorMessage) => { }
+            ).catch(err => alert("Erreur caméra : " + err));
+        }
 
         function updateUI() {
             const list = document.getElementById("scannedList");
@@ -127,33 +118,31 @@
 
         // ENVOI AU SHEET
         function sendData(type) {
-    const driver = document.getElementById("driverName").value;
-    if(!driver) return alert("Indique ton nom");
+            const driver = document.getElementById("driverName").value;
+            if(!driver) return alert("Indique ton nom");
 
-    // On prépare l'objet à envoyer
-    const payload = {
-        type: type,
-        driver: driver,
-        // Pour le déchargement, on transforme la liste en texte simple séparé par des virgules
-        scans: type === 'DECHARGEMENT' ? scannedData.join(", ") : "",
-        signature: type === 'DEPART' ? signaturePad.toDataURL() : ""
-    };
+            // On s'assure de récupérer la liste la plus récente
+            const payload = {
+                type: type,
+                driver: driver,
+                scans: type === 'DECHARGEMENT' ? scannedData.join(", ") : "",
+                signature: type === 'DEPART' ? signaturePad.toDataURL() : ""
+            };
 
-    fetch(SCRIPT_URL, {
-        method: "POST",
-        mode: "no-cors", 
-        body: JSON.stringify(payload)
-    }).then(() => {
-        alert("Validé avec succès !");
-        if(type === 'DEPART') signaturePad.clear();
-        if(type === 'DECHARGEMENT') { 
-            scannedData = []; 
-            updateUI(); 
-            // On peut arrêter la caméra après validation pour économiser la batterie
-            html5QrCode.stop().catch(() => {}); 
+            fetch(SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors", 
+                body: JSON.stringify(payload)
+            }).then(() => {
+                alert("Validé avec succès !");
+                if(type === 'DEPART') signaturePad.clear();
+                if(type === 'DECHARGEMENT') { 
+                    scannedData = []; 
+                    updateUI(); 
+                    html5QrCode.stop().catch(() => {}); 
+                }
+            }).catch(err => alert("Erreur d'envoi."));
         }
-    }).catch(err => alert("Erreur d'envoi."));
-}
     </script>
 </body>
 </html>
