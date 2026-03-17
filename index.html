@@ -19,15 +19,8 @@
         .scanned-list { padding: 0; list-style: none; }
         .scanned-item { background: #f0f0f0; padding: 10px; border-radius: 6px; margin-top: 8px; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; }
         .remove-btn { color: red; font-weight: bold; padding: 5px 10px; }
-
-        /* Animation de flash vert */
-        .flash-success {
-            animation: flash 0.4s;
-        }
-        @keyframes flash {
-            0% { background-color: rgba(0, 255, 0, 0.5); }
-            100% { background-color: transparent; }
-        }
+        .flash-success { animation: flash 0.4s; }
+        @keyframes flash { 0% { background-color: rgba(0, 255, 0, 0.5); } 100% { background-color: transparent; } }
     </style>
 </head>
 <body>
@@ -48,12 +41,12 @@
     </div>
 
     <script>
-        // CONFIGURATION
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx9eHiFeRMZ9Zh0fO63Kb3LmgQoDEpkw12kZGdxdIPRI6ozg4y12eKqs0TEJb13Bdl-/exec";
-
-        // INIT SIGNATURE
         const canvas = document.getElementById("signature-pad");
         const signaturePad = new SignaturePad(canvas);
+        const html5QrCode = new Html5Qrcode("reader");
+        let scannedData = [];
+
         function resizeCanvas() {
             const ratio = Math.max(window.devicePixelRatio || 1, 1);
             canvas.width = canvas.offsetWidth * ratio;
@@ -64,39 +57,25 @@
         window.addEventListener("resize", resizeCanvas);
         resizeCanvas();
 
-        // SCAN LOGIC
-        const html5QrCode = new Html5Qrcode("reader");
-        let scannedData = [];
-
         function startScan() {
-            html5QrCode.start(
-                { facingMode: "environment" }, 
-                { fps: 20, qrbox: { width: 250, height: 250 } },
-                (decodedText) => {
-                    // Animation Flash
-                    document.body.classList.add('flash-success');
-                    setTimeout(() => document.body.classList.remove('flash-success'), 400);
+            html5QrCode.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (decodedText) => {
+                document.body.classList.add('flash-success');
+                setTimeout(() => document.body.classList.remove('flash-success'), 400);
+                if (navigator.vibrate) navigator.vibrate(100);
 
-                    if (navigator.vibrate) navigator.vibrate(100);
+                let codeToStore = decodedText;
+                try {
+                    const urlObj = new URL(decodedText);
+                    const params = new URLSearchParams(urlObj.search);
+                    const codeEquip = params.get('codeEquipement');
+                    if (codeEquip) { codeToStore = codeEquip; }
+                } catch (e) { }
 
-                    let displayValue = decodedText;
-                    try {
-                        if (decodedText.includes('data=')) {
-                            const urlObj = new URL(decodedText);
-                            const params = new URLSearchParams(urlObj.search);
-                            const rawData = params.get('data');
-                            const info = JSON.parse(decodeURIComponent(rawData));
-                            displayValue = `Coll: ${info.collecteId} | Equip: ${info.equipementId}`;
-                        }
-                    } catch (e) { console.log("Standard Scan"); }
-
-                    if (!scannedData.includes(displayValue)) {
-                        scannedData.push(displayValue);
-                        updateUI();
-                    }
-                },
-                (errorMessage) => { }
-            ).catch(err => alert("Erreur caméra : " + err));
+                if (!scannedData.includes(codeToStore)) {
+                    scannedData.push(codeToStore);
+                    updateUI();
+                }
+            }).catch(err => alert("Erreur caméra : " + err));
         }
 
         function updateUI() {
@@ -116,31 +95,24 @@
             updateUI();
         }
 
-        // ENVOI AU SHEET
         function sendData(type) {
             const driver = document.getElementById("driverName").value;
             if(!driver) return alert("Indique ton nom");
 
-            // On s'assure de récupérer la liste la plus récente
             const payload = {
                 type: type,
                 driver: driver,
-                scans: type === 'DECHARGEMENT' ? scannedData.join(", ") : "",
+                scans: type === 'DECHARGEMENT' ? scannedData : "", // On envoie le tableau brut
                 signature: type === 'DEPART' ? signaturePad.toDataURL() : ""
             };
 
             fetch(SCRIPT_URL, {
                 method: "POST",
-                mode: "no-cors", 
+                mode: "no-cors",
                 body: JSON.stringify(payload)
             }).then(() => {
-                alert("Validé avec succès !");
-                if(type === 'DEPART') signaturePad.clear();
-                if(type === 'DECHARGEMENT') { 
-                    scannedData = []; 
-                    updateUI(); 
-                    html5QrCode.stop().catch(() => {}); 
-                }
+                alert("Enregistré avec succès !");
+                location.reload();
             }).catch(err => alert("Erreur d'envoi."));
         }
     </script>
