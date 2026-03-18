@@ -169,28 +169,47 @@
 
         function stopScanner() { if(html5QrCode) html5QrCode.stop(); }
 
+        // Remplace la fonction sendData par celle-ci dans ton script :
+
         function sendData(type) {
-            const btn = document.getElementById('btnValidDepart');
+            const btn = type === 'DEPART' ? document.getElementById('btnValidDepart') : document.getElementById('btnSendRetour');
+            const originalText = btn.innerText;
+            
             btn.innerText = "Envoi en cours...";
             btn.disabled = true;
-
+        
             const payload = {
                 type: type,
                 driver: document.getElementById("driverName").value + " (" + document.getElementById("tourneeSelect").value + ")",
-                scans: type === 'DEPART' ? "Photo transmise" : [],
+                scans: type === 'DEPART' ? "Photo transmise" : [], // Tu peux mettre tes données de scan ici pour le retour
                 signature: type === 'DEPART' ? photoBase64 : ""
             };
-
+        
             fetch(SCRIPT_URL, {
                 method: "POST",
                 mode: "no-cors",
                 body: JSON.stringify(payload)
             }).then(() => {
                 alert("Validé avec succès !");
-                location.reload();
-            }).catch(() => {
-                alert("Erreur d'envoi");
-                btn.innerText = "Valider le départ";
+                
+                // --- LA MODIFICATION EST ICI ---
+                // 1. On réinitialise les données sans recharger la page
+                photoBase64 = "";
+                document.getElementById('imgPreview').src = "";
+                document.getElementById('imgPreview').style.display = "none";
+                document.getElementById('photoInput').value = "";
+                
+                // 2. On remet le bouton à l'état normal
+                btn.innerText = originalText;
+                btn.disabled = false;
+                
+                // 3. On redirige vers le menu de choix au lieu de l'accueil
+                goPage('page-menu'); 
+                
+            }).catch((error) => {
+                console.error(error);
+                alert("Erreur d'envoi. Vérifie ta connexion.");
+                btn.innerText = originalText;
                 btn.disabled = false;
             });
         }
