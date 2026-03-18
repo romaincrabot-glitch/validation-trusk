@@ -10,7 +10,7 @@
         body { font-family: -apple-system, sans-serif; margin: 0; padding: 15px; background: #f4f7f9; color: #333; }
         .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
         h2 { font-size: 1.1rem; margin-top: 0; display: flex; align-items: center; gap: 10px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; background: white; }
         .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
         .btn-black { background: black; color: white; margin-top: 10px; }
         .btn-scan { background: #00aaff; color: white; margin-top: 10px; }
@@ -26,8 +26,16 @@
 <body>
 
     <div class="card">
-        <h2>🚚 1. Émargement Départ</h2>
+        <h2>🚚 1. Identification & Départ</h2>
         <input type="text" id="driverName" placeholder="Ton Prénom / Nom">
+        
+        <select id="tourneeSelect">
+            <option value="">-- Choisir une tournée --</option>
+            <option value="Tournée 1">Tournée 1</option>
+            <option value="Tournée 2">Tournée 2</option>
+            <option value="Tournée 3">Tournée 3</option>
+        </select>
+
         <canvas id="signature-pad"></canvas>
         <button class="btn btn-black" onclick="sendData('DEPART')">Valider le Départ</button>
     </div>
@@ -47,6 +55,14 @@
         const html5QrCode = new Html5Qrcode("reader");
         let scannedData = [];
 
+        // CHARGEMENT DE LA MÉMOIRE (NOM UNIQUEMENT)
+        window.onload = function() {
+            const savedName = localStorage.getItem('trusk_name');
+            if (savedName) document.getElementById("driverName").value = savedName;
+            // La tournée reste sur l'option par défaut (vide)
+            resizeCanvas();
+        };
+
         function resizeCanvas() {
             const ratio = Math.max(window.devicePixelRatio || 1, 1);
             canvas.width = canvas.offsetWidth * ratio;
@@ -55,12 +71,12 @@
             signaturePad.clear();
         }
         window.addEventListener("resize", resizeCanvas);
-        resizeCanvas();
 
         function startScan() {
             html5QrCode.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (decodedText) => {
                 document.body.classList.add('flash-success');
                 setTimeout(() => document.body.classList.remove('flash-success'), 400);
+                
                 if (navigator.vibrate) navigator.vibrate(100);
 
                 let codeToStore = decodedText;
@@ -97,12 +113,17 @@
 
         function sendData(type) {
             const driver = document.getElementById("driverName").value;
-            if(!driver) return alert("Indique ton nom");
+            const tournee = document.getElementById("tourneeSelect").value;
+            
+            if(!driver || !tournee) return alert("Indique ton nom ET choisis ta tournée !");
+
+            // SAUVEGARDE DU NOM UNIQUEMENT
+            localStorage.setItem('trusk_name', driver);
 
             const payload = {
                 type: type,
-                driver: driver,
-                scans: type === 'DECHARGEMENT' ? scannedData : "", // On envoie le tableau brut
+                driver: driver + " (" + tournee + ")",
+                scans: type === 'DECHARGEMENT' ? scannedData : "",
                 signature: type === 'DEPART' ? signaturePad.toDataURL() : ""
             };
 
