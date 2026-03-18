@@ -3,139 +3,225 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Validation Trusk - Iloé</title>
+    <title>Trusk Hub - Iloé</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
-    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
     <style>
-        body { font-family: -apple-system, sans-serif; margin: 0; padding: 15px; background: #f4f7f9; color: #333; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        h2 { font-size: 1.1rem; margin-top: 0; display: flex; align-items: center; gap: 10px; }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; background: white; }
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
-        .btn-black { background: black; color: white; margin-top: 10px; }
-        .btn-scan { background: #00aaff; color: white; margin-top: 10px; }
-        #signature-pad { border: 1px solid #eee; width: 100%; height: 180px; border-radius: 8px; background: #fafafa; }
-        #reader { width: 100%; border-radius: 12px; overflow: hidden; margin-top: 10px; }
-        .scanned-list { padding: 0; list-style: none; }
-        .scanned-item { background: #f0f0f0; padding: 10px; border-radius: 6px; margin-top: 8px; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; }
-        .remove-btn { color: red; font-weight: bold; padding: 5px 10px; }
+        :root { --trusk-blue: #00aaff; --bg: #f8f9fa; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background: var(--bg); color: #1a1a1a; overflow-x: hidden; }
+        
+        /* Layout */
+        .page { display: none; padding: 20px; min-height: 100vh; box-sizing: border-box; flex-direction: column; }
+        .page.active { display: flex; animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Header */
+        .header { text-align: center; padding: 20px 0; }
+        .logo { font-weight: 900; font-size: 24px; letter-spacing: -1px; }
+        .logo span { color: var(--trusk-blue); }
+
+        /* Form Elements */
+        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        input, select { width: 100%; padding: 16px; margin: 10px 0; border: 2px solid #eee; border-radius: 12px; font-size: 16px; outline: none; transition: 0.2s; -webkit-appearance: none; }
+        input:focus, select:focus { border-color: var(--trusk-blue); }
+        label { font-weight: 600; font-size: 14px; margin-left: 5px; color: #666; }
+
+        /* Buttons */
+        .btn { width: 100%; padding: 18px; border: none; border-radius: 15px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn:active { transform: scale(0.98); }
+        .btn-black { background: #000; color: white; }
+        .btn-blue { background: var(--trusk-blue); color: white; }
+        .btn-outline { background: white; border: 2px solid #eee; color: #1a1a1a; }
+        .btn-back { margin-top: auto; padding: 12px; font-size: 14px; color: #999; text-decoration: underline; background: none; border: none; }
+
+        /* Menu Grid */
+        .menu-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 20px; }
+        .menu-item { background: white; padding: 30px 20px; border-radius: 20px; text-align: center; border: 2px solid transparent; transition: 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .menu-item:active { border-color: var(--trusk-blue); background: #f0faff; }
+        .menu-item i { font-size: 32px; display: block; margin-bottom: 10px; }
+
+        /* Specifics */
+        #reader { width: 100%; border-radius: 15px; overflow: hidden; background: #000; }
+        .scanned-list { margin-top: 15px; padding: 0; }
+        .scanned-item { background: white; padding: 12px 15px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; }
+        .preview-img { width: 100%; border-radius: 12px; margin-top: 10px; display: none; border: 2px solid var(--trusk-blue); }
+        
+        /* Flash Animation */
         .flash-success { animation: flash 0.4s; }
-        @keyframes flash { 0% { background-color: rgba(0, 255, 0, 0.5); } 100% { background-color: transparent; } }
+        @keyframes flash { 0% { background-color: rgba(0, 255, 0, 0.4); } 100% { background-color: transparent; } }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h2>🚚 1. Identification & Départ</h2>
-        <input type="text" id="driverName" placeholder="Ton Prénom / Nom">
-        
-        <select id="tourneeSelect">
-            <option value="">-- Choisir une tournée --</option>
-            <option value="Tournée 1">Tournée 1</option>
-            <option value="Tournée 2">Tournée 2</option>
-            <option value="Tournée 3">Tournée 3</option>
-        </select>
-
-        <canvas id="signature-pad"></canvas>
-        <button class="btn btn-black" onclick="sendData('DEPART')">Valider le Départ</button>
+    <div id="page-login" class="page active">
+        <div class="header"><div class="logo">TRUSK<span>HUB</span></div></div>
+        <div class="card">
+            <h2>Bonjour ! 👋</h2>
+            <label>NOM DU CHAUFFEUR</label>
+            <input type="text" id="driverName" placeholder="Ex: Jean Martin">
+            
+            <label>TOURNEE DU JOUR</label>
+            <select id="tourneeSelect">
+                <option value="">Sélectionner...</option>
+                <option value="Tournée 1">Tournée 1</option>
+                <option value="Tournée 2">Tournée 2</option>
+                <option value="Tournée 3">Tournée 3</option>
+            </select>
+            <button class="btn btn-black" onclick="goMenu()">Continuer</button>
+        </div>
     </div>
 
-    <div class="card">
-        <h2>📦 2. Déchargement Ecosystem</h2>
+    <div id="page-menu" class="page">
+        <div class="header"><div class="logo">TRUSK<span>HUB</span></div></div>
+        <div class="menu-grid">
+            <div class="menu-item" onclick="goDepart()">
+                <i>🚚</i>
+                <strong>Valider le départ</strong>
+                <p style="font-size: 12px; color: #666; margin-top:5px;">Photos documents & étiquettes</p>
+            </div>
+            <div class="menu-item" onclick="goRetour()">
+                <i>📦</i>
+                <strong>Retour appareils</strong>
+                <p style="font-size: 12px; color: #666; margin-top:5px;">Scan Ecosystem (Déchargement)</p>
+            </div>
+        </div>
+        <button class="btn-back" onclick="goPage('page-login')">Changer de nom ou de tournée</button>
+    </div>
+
+    <div id="page-action-depart" class="page">
+        <h2>Preuve de départ 📸</h2>
+        <p style="color: #666;">Prenez en photo vos étiquettes et feuilles de route.</p>
+        <div class="card">
+            <input type="file" id="photoInput" accept="image/*" capture="camera" style="display: none;" onchange="previewPhoto(this)">
+            <button class="btn btn-outline" onclick="document.getElementById('photoInput').click()">📷 Prendre la photo</button>
+            <img id="imgPreview" class="preview-img">
+        </div>
+        <button class="btn btn-black" onclick="sendDepart()">Valider mon départ</button>
+        <button class="btn-back" onclick="goMenu()">Annuler</button>
+    </div>
+
+    <div id="page-action-retour" class="page">
+        <h2>Scan Retour 📦</h2>
         <div id="reader"></div>
-        <button class="btn btn-scan" onclick="startScan()">📷 Scanner un appareil</button>
+        <button class="btn btn-blue" style="margin-top: 15px;" onclick="startScanner()">📷 Scanner un code</button>
         <ul id="scannedList" class="scanned-list"></ul>
-        <button class="btn btn-black" id="btn-save-unload" style="display:none;" onclick="sendData('DECHARGEMENT')">Valider le Retour</button>
+        <button class="btn btn-black" id="btnSendRetour" style="display: none; margin-top: 10px;" onclick="sendRetour()">Terminer le déchargement</button>
+        <button class="btn-back" onclick="stopScanner(); goMenu()">Annuler</button>
     </div>
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx9eHiFeRMZ9Zh0fO63Kb3LmgQoDEpkw12kZGdxdIPRI6ozg4y12eKqs0TEJb13Bdl-/exec";
-        const canvas = document.getElementById("signature-pad");
-        const signaturePad = new SignaturePad(canvas);
-        const html5QrCode = new Html5Qrcode("reader");
         let scannedData = [];
+        let html5QrCode = null;
 
-        // CHARGEMENT DE LA MÉMOIRE (NOM UNIQUEMENT)
-        window.onload = function() {
-            const savedName = localStorage.getItem('trusk_name');
-            if (savedName) document.getElementById("driverName").value = savedName;
-            // La tournée reste sur l'option par défaut (vide)
-            resizeCanvas();
-        };
-
-        function resizeCanvas() {
-            const ratio = Math.max(window.devicePixelRatio || 1, 1);
-            canvas.width = canvas.offsetWidth * ratio;
-            canvas.height = canvas.offsetHeight * ratio;
-            canvas.getContext("2d").scale(ratio, ratio);
-            signaturePad.clear();
+        // --- NAVIGATION ---
+        function goPage(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            window.scrollTo(0,0);
         }
-        window.addEventListener("resize", resizeCanvas);
 
-        function startScan() {
-            html5QrCode.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (decodedText) => {
+        function goMenu() {
+            const name = document.getElementById("driverName").value;
+            const tournee = document.getElementById("tourneeSelect").value;
+            if(!name || !tournee) return alert("Veuillez remplir votre profil.");
+            localStorage.setItem('trusk_driver', name);
+            goPage('page-menu');
+        }
+
+        function goDepart() { goPage('page-action-depart'); }
+        function goRetour() { goPage('page-action-retour'); }
+
+        // --- GESTION PHOTO (DEPART) ---
+        let photoBase64 = "";
+        function previewPhoto(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.getElementById('imgPreview');
+                    img.src = e.target.result;
+                    img.style.display = "block";
+                    photoBase64 = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // --- GESTION SCANNER (RETOUR) ---
+        function startScanner() {
+            if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (text) => {
                 document.body.classList.add('flash-success');
                 setTimeout(() => document.body.classList.remove('flash-success'), 400);
-                
                 if (navigator.vibrate) navigator.vibrate(100);
 
-                let codeToStore = decodedText;
+                let code = text;
                 try {
-                    const urlObj = new URL(decodedText);
-                    const params = new URLSearchParams(urlObj.search);
-                    const codeEquip = params.get('codeEquipement');
-                    if (codeEquip) { codeToStore = codeEquip; }
-                } catch (e) { }
+                    const url = new URL(text);
+                    code = url.searchParams.get('codeEquipement') || text;
+                } catch(e) {}
 
-                if (!scannedData.includes(codeToStore)) {
-                    scannedData.push(codeToStore);
-                    updateUI();
+                if(!scannedData.includes(code)) {
+                    scannedData.push(code);
+                    renderList();
                 }
-            }).catch(err => alert("Erreur caméra : " + err));
-        }
-
-        function updateUI() {
-            const list = document.getElementById("scannedList");
-            list.innerHTML = "";
-            scannedData.forEach((code, index) => {
-                const li = document.createElement("li");
-                li.className = "scanned-item";
-                li.innerHTML = `<span>${code}</span><span class="remove-btn" onclick="removeItem(${index})">Suppr.</span>`;
-                list.appendChild(li);
             });
-            document.getElementById("btn-save-unload").style.display = scannedData.length > 0 ? "block" : "none";
         }
 
-        function removeItem(index) {
-            scannedData.splice(index, 1);
-            updateUI();
+        function stopScanner() {
+            if(html5QrCode) html5QrCode.stop().catch(() => {});
         }
 
-        function sendData(type) {
-            const driver = document.getElementById("driverName").value;
-            const tournee = document.getElementById("tourneeSelect").value;
-            
-            if(!driver || !tournee) return alert("Indique ton nom ET choisis ta tournée !");
+        function renderList() {
+            const list = document.getElementById("scannedList");
+            list.innerHTML = scannedData.map((c, i) => `
+                <li class="scanned-item">
+                    <span>${c}</span>
+                    <span style="color:red; font-weight:bold" onclick="removeScan(${i})">Suppr.</span>
+                </li>
+            `).join('');
+            document.getElementById("btnSendRetour").style.display = scannedData.length > 0 ? "block" : "none";
+        }
 
-            // SAUVEGARDE DU NOM UNIQUEMENT
-            localStorage.setItem('trusk_name', driver);
+        function removeScan(i) {
+            scannedData.splice(i, 1);
+            renderList();
+        }
 
+        // --- ENVOIS ---
+        function sendDepart() {
+            if(!photoBase64) return alert("Prenez une photo d'abord.");
             const payload = {
-                type: type,
-                driver: driver + " (" + tournee + ")",
-                scans: type === 'DECHARGEMENT' ? scannedData : "",
-                signature: type === 'DEPART' ? signaturePad.toDataURL() : ""
+                type: "DEPART",
+                driver: document.getElementById("driverName").value + " (" + document.getElementById("tourneeSelect").value + ")",
+                scans: "Photo transmise",
+                signature: photoBase64 // On utilise le même champ que signature pour stocker la photo
             };
-
-            fetch(SCRIPT_URL, {
-                method: "POST",
-                mode: "no-cors",
-                body: JSON.stringify(payload)
-            }).then(() => {
-                alert("Enregistré avec succès !");
-                location.reload();
-            }).catch(err => alert("Erreur d'envoi."));
+            postData(payload);
         }
+
+        function sendRetour() {
+            const payload = {
+                type: "RETOUR",
+                driver: document.getElementById("driverName").value + " (" + document.getElementById("tourneeSelect").value + ")",
+                scans: scannedData,
+                signature: ""
+            };
+            postData(payload);
+        }
+
+        function postData(payload) {
+            fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) })
+            .then(() => {
+                alert("Validé avec succès !");
+                location.reload();
+            }).catch(() => alert("Erreur de connexion."));
+        }
+
+        // INITIALISATION
+        window.onload = () => {
+            const saved = localStorage.getItem('trusk_driver');
+            if(saved) document.getElementById("driverName").value = saved;
+        };
     </script>
 </body>
 </html>
