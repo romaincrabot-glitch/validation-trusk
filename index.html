@@ -18,72 +18,47 @@
         
         body { 
             font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
-            margin: 0; 
-            background: var(--bg-body); 
-            color: var(--text-main); 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            min-height: 100vh; 
+            margin: 0; background: var(--bg-body); color: var(--text-main); 
+            display: flex; flex-direction: column; align-items: center; min-height: 100vh; 
         }
         
         .page { display: none; padding: 20px; width: 100%; box-sizing: border-box; flex-direction: column; align-items: center; }
         .page.active { display: flex; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* LOGO GITHUB */
         .logo-container { width: 100%; text-align: center; margin: 40px 0; }
         .logo-img { width: 220px; height: auto; }
         .logo-small { width: 100px; margin: 10px 0 20px 0; }
 
-        /* FIX ENCART : box-sizing indispensable */
+        /* FIX ENCART : box-sizing pour éviter le dépassement */
         .card { 
-            background: var(--bg-card); 
-            padding: 25px; 
-            border-radius: 20px; 
-            width: 100%; 
-            max-width: 380px; 
-            box-sizing: border-box; /* Empêche le contenu de dépasser */
-            margin-bottom: 20px; 
+            background: var(--bg-card); padding: 25px; border-radius: 20px; 
+            width: 100%; max-width: 380px; box-sizing: border-box; margin-bottom: 20px; 
         }
         
-        h2 { text-align: center; margin-top: 0; }
-        
-        label { 
-            font-weight: 600; font-size: 12px; color: var(--text-sub); 
-            display: block; margin-bottom: 5px; text-transform: uppercase; 
-        }
+        h2 { text-align: center; margin-top: 0; font-size: 1.2rem; }
+        label { font-weight: 600; font-size: 12px; color: var(--text-sub); display: block; margin-bottom: 5px; text-transform: uppercase; }
 
-        /* FIX INPUTS : width 100% + border-box */
         input, select { 
-            width: 100%; 
-            padding: 15px; 
-            margin-bottom: 20px; 
-            border: 1px solid #333; 
-            border-radius: 12px; 
-            font-size: 16px; 
-            background: #2c2c2e; 
-            color: white; 
-            box-sizing: border-box; /* Reste à l'intérieur de la carte */
-            -webkit-appearance: none;
+            width: 100%; padding: 15px; margin-bottom: 20px; border: 1px solid #333; 
+            border-radius: 12px; font-size: 16px; background: #2c2c2e; color: white; 
+            box-sizing: border-box; -webkit-appearance: none;
         }
 
         .btn { 
             width: 100%; padding: 18px; border: none; border-radius: 15px; 
-            font-weight: 700; font-size: 16px; cursor: pointer; 
-            text-transform: uppercase; box-sizing: border-box;
+            font-weight: 700; font-size: 16px; cursor: pointer; text-transform: uppercase; 
+            box-sizing: border-box; transition: 0.2s;
         }
+        .btn:active { transform: scale(0.98); }
         .btn-blue { background: var(--trusk-blue); color: white; }
         .btn-outline { background: none; border: 2px solid #333; color: white; margin-top: 10px; }
         .btn-back { background: none; color: var(--text-sub); text-decoration: underline; margin-top: 20px; border: none; }
 
         .menu-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; max-width: 380px; }
-        .menu-item { 
-            background: var(--bg-card); padding: 30px; border-radius: 20px; 
-            text-align: center; border: 1px solid #333; 
-        }
+        .menu-item { background: var(--bg-card); padding: 30px; border-radius: 20px; text-align: center; border: 1px solid #333; }
 
-        #reader { width: 100%; border-radius: 15px; overflow: hidden; background: #000; }
+        #reader { width: 100%; border-radius: 15px; overflow: hidden; background: #000; border: 1px solid #333; }
         .preview-img { width: 100%; border-radius: 12px; margin-top: 15px; display: none; border: 2px solid var(--trusk-blue); }
     </style>
 </head>
@@ -102,6 +77,7 @@
                 <option value="">Choisir...</option>
                 <option value="T1">Tournée 1</option>
                 <option value="T2">Tournée 2</option>
+                <option value="T3">Tournée 3</option>
             </select>
             <button class="btn btn-blue" onclick="goMenu()">Continuer</button>
         </div>
@@ -112,92 +88,117 @@
         <h2 id="menuWelcomeText">Menu</h2>
         <div class="menu-grid">
             <div class="menu-item" onclick="goPage('page-action-depart')">
-                <strong>🚚 DÉPART</strong>
+                <span style="font-size: 24px;">🚚</span><br><strong>DÉPART</strong>
             </div>
             <div class="menu-item" onclick="goPage('page-action-retour')">
-                <strong>📦 RETOUR</strong>
+                <span style="font-size: 24px;">📦</span><br><strong>RETOUR</strong>
             </div>
         </div>
-        <button class="btn-back" onclick="goPage('page-login')">Déconnexion</button>
+        <button class="btn-back" onclick="goPage('page-login')">Changer de chauffeur</button>
     </div>
 
     <div id="page-action-depart" class="page">
         <h2>Photo Départ 📸</h2>
         <div class="card">
             <input type="file" id="photoInput" accept="image/*" capture="camera" style="display: none;" onchange="previewPhoto(this)">
-            <button class="btn btn-outline" onclick="document.getElementById('photoInput').click()">Prendre Photo</button>
+            <button class="btn btn-outline" onclick="document.getElementById('photoInput').click()">📷 Prendre Photo</button>
             <img id="imgPreview" class="preview-img">
         </div>
-        <button class="btn btn-blue" id="btnValidDepart" onclick="sendDepart()">Valider</button>
+        <button class="btn btn-blue" id="btnValidDepart" onclick="sendData('DEPART')">Valider le départ</button>
         <button class="btn-back" onclick="goPage('page-menu')">Retour</button>
     </div>
 
     <div id="page-action-retour" class="page">
         <h2>Scan Retour 📦</h2>
         <div id="reader"></div>
-        <button class="btn btn-blue" style="margin-top:15px;" onclick="startScanner()">Lancer Scanner</button>
+        <button class="btn btn-blue" style="margin-top:15px;" onclick="startScanner()">📷 Lancer Scanner</button>
         <button class="btn-back" onclick="stopScanner(); goPage('page-menu')">Retour</button>
     </div>
 
     <script>
-        const SCRIPT_URL = "TON_URL_GOOGLE_APPS_SCRIPT";
+        const SCRIPT_URL = "TON_URL_GOOGLE_APPS_SCRIPT"; // <--- METS TON LIEN ICI
         let photoBase64 = "";
+        let html5QrCode = null;
 
         function goPage(id) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(id).classList.add('active');
+            window.scrollTo(0,0);
         }
 
         function goMenu() {
             const name = document.getElementById("driverName").value;
-            if(!name) return alert("Nom requis");
-            document.getElementById('menuWelcomeText').innerText = name;
+            const tournee = document.getElementById("tourneeSelect").value;
+            if(!name || !tournee) return alert("Remplis ton nom et ta tournée");
+            localStorage.setItem('trusk_driver', name);
+            document.getElementById('menuWelcomeText').innerText = name + " (" + tournee + ")";
             goPage('page-menu');
         }
 
+        // COMPRESSION DE LA PHOTO POUR EVITER LE BLOCAGE 
         function previewPhoto(input) {
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            const imgEl = new Image();
-            imgEl.onload = function () {
-                // --- REDIMENSIONNEMENT ---
-                const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 800; // On limite la largeur pour alléger l'envoi
-                const scaleSize = MAX_WIDTH / imgEl.width;
-                canvas.width = MAX_WIDTH;
-                canvas.height = imgEl.height * scaleSize;
-
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(imgEl, 0, 0, canvas.width, canvas.height);
-
-                // On récupère la version compressée en JPEG
-                photoBase64 = canvas.toDataURL('image/jpeg', 0.7); // Qualité 70%
-                
-                const preview = document.getElementById('imgPreview');
-                preview.src = photoBase64;
-                preview.style.display = "block";
-            };
-            imgEl.src = e.target.result;
-        };
-        reader.readAsDataURL(input.files[0]);
-    }
-}
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 800;
+                        const scale = MAX_WIDTH / img.width;
+                        canvas.width = MAX_WIDTH;
+                        canvas.height = img.height * scale;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        photoBase64 = canvas.toDataURL('image/jpeg', 0.6); // Compression 60% [cite: 4]
+                        document.getElementById('imgPreview').src = photoBase64;
+                        document.getElementById('imgPreview').style.display = "block";
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
 
         function startScanner() {
-            const html5QrCode = new Html5Qrcode("reader");
+            if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
             html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
+                if (navigator.vibrate) navigator.vibrate(100);
                 alert("Scanné : " + text);
             });
         }
-        
-        function stopScanner() { /* Logique d'arrêt */ }
 
-        function sendDepart() {
-            if(!photoBase64) return alert("Photo manquante");
-            alert("Envoi en cours...");
-            // Logique fetch vers ton Google Sheet ici
+        function stopScanner() { if(html5QrCode) html5QrCode.stop(); }
+
+        function sendData(type) {
+            const btn = document.getElementById('btnValidDepart');
+            btn.innerText = "Envoi en cours...";
+            btn.disabled = true;
+
+            const payload = {
+                type: type,
+                driver: document.getElementById("driverName").value + " (" + document.getElementById("tourneeSelect").value + ")",
+                scans: type === 'DEPART' ? "Photo transmise" : [],
+                signature: type === 'DEPART' ? photoBase64 : ""
+            };
+
+            fetch(SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                body: JSON.stringify(payload)
+            }).then(() => {
+                alert("Validé avec succès !");
+                location.reload();
+            }).catch(() => {
+                alert("Erreur d'envoi");
+                btn.innerText = "Valider le départ";
+                btn.disabled = false;
+            });
         }
+
+        window.onload = () => {
+            const saved = localStorage.getItem('trusk_driver');
+            if(saved) document.getElementById("driverName").value = saved;
+        };
     </script>
 </body>
 </html>
