@@ -9,7 +9,7 @@
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         :root { 
-            --trusk-pink: #ff0088; 
+            --trusk-blue: #0088ff; /* Bleu électrique Trusk */
             --bg-body: #111; 
             --bg-card: #222; 
             --text-main: #fff; 
@@ -23,9 +23,9 @@
         .page.active { display: flex; animation: slideIn 0.3s ease-out; }
         @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Style des logos (SVG/Base64 intégré) */
+        /* Style des logos (SVG intégré) */
         .logo-container { width: 100%; display: flex; justify-content: center; margin: 40px 0; }
-        .logo-img { width: 220px; height: auto; filter: drop-shadow(0 0 10px rgba(255,0,136,0.3)); }
+        .logo-img { width: 220px; height: auto; filter: drop-shadow(0 0 12px rgba(0,136,255,0.4)); }
         .logo-small { width: 100px; margin: 10px 0 20px 0; }
 
         .card { background: var(--bg-card); padding: 30px; border-radius: 20px; box-shadow: var(--shadow); width: 100%; max-width: 400px; box-sizing: border-box; margin-bottom: 20px; }
@@ -33,25 +33,25 @@
         p.subtitle { color: var(--text-sub); text-align: center; margin-top: -10px; margin-bottom: 25px; }
         
         input, select { width: 100%; padding: 18px; margin: 12px 0; border: 2px solid #333; border-radius: 12px; font-size: 16px; outline: none; background: #2a2a2a; color: white; box-sizing: border-box; -webkit-appearance: none; }
-        input:focus, select:focus { border-color: var(--trusk-pink); }
+        input:focus, select:focus { border-color: var(--trusk-blue); }
         label { font-weight: 600; font-size: 12px; color: var(--text-sub); display: block; margin-top: 10px; text-transform: uppercase; }
 
         .btn { width: 100%; max-width: 400px; padding: 20px; border: none; border-radius: 15px; font-weight: 700; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; text-transform: uppercase; letter-spacing: 1px; box-sizing: border-box; transition: 0.2s; }
         .btn:active { transform: scale(0.97); }
-        .btn-blue { background: var(--trusk-pink); color: white; box-shadow: 0 5px 20px rgba(255,0,136,0.4); }
+        .btn-blue { background: var(--trusk-blue); color: white; box-shadow: 0 5px 20px rgba(0,136,255,0.4); }
         .btn-outline { background: none; border: 2px solid #333; color: white; margin-top: 10px; }
         .btn-back { margin-top: auto; padding: 20px; font-size: 14px; color: var(--text-sub); text-decoration: underline; background: none; border: none; }
 
         .menu-grid { display: grid; grid-template-columns: 1fr; gap: 20px; width: 100%; max-width: 400px; box-sizing: border-box; }
         .menu-item { background: var(--bg-card); padding: 40px 20px; border-radius: 20px; text-align: center; border: 2px solid #333; box-shadow: var(--shadow); box-sizing: border-box; }
-        .menu-item:active { border-color: var(--trusk-pink); background: #2a2a2a; }
+        .menu-item:active { border-color: var(--trusk-blue); background: #2a2a2a; }
         .icon-circle { width: 60px; height: 60px; background: #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 24px; }
 
         #reader { width: 100%; border-radius: 15px; overflow: hidden; background: #000; border: 2px solid #333; }
         .scanned-item { background: #2a2a2a; padding: 15px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; }
-        .preview-img { width: 100%; border-radius: 12px; margin-top: 15px; display: none; border: 3px solid var(--trusk-pink); }
+        .preview-img { width: 100%; border-radius: 12px; margin-top: 15px; display: none; border: 3px solid var(--trusk-blue); }
         .flash-success { animation: flash 0.4s; }
-        @keyframes flash { 0% { background-color: rgba(255, 0, 136, 0.5); } 100% { background-color: transparent; } }
+        @keyframes flash { 0% { background-color: rgba(0, 136, 255, 0.5); } 100% { background-color: transparent; } }
     </style>
 </head>
 <body>
@@ -60,9 +60,9 @@
         <div class="logo-container">
             <svg class="logo-img" viewBox="0 0 500 150" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M45 40H115M80 40V110" stroke="white" stroke-width="24" stroke-linecap="round"/>
-                <path d="M140 110V40H185C205 40 215 50 215 65C215 80 205 90 185 90H140M180 90L215 110" stroke="#ff0088" stroke-width="24" stroke-linecap="round"/>
+                <path d="M140 110V40H185C205 40 215 50 215 65C215 80 205 90 185 90H140M180 90L215 110" stroke="#0088ff" stroke-width="24" stroke-linecap="round"/>
                 <path d="M250 40V85C250 100 260 110 275 110C290 110 300 100 300 85V40" stroke="white" stroke-width="24" stroke-linecap="round"/>
-                <path d="M380 55C380 45 370 40 355 40C340 40 330 45 330 55C330 75 380 75 380 95C380 105 370 110 355 110C340 110 330 105 330 95" stroke="#ff0088" stroke-width="24" stroke-linecap="round"/>
+                <path d="M380 55C380 45 370 40 355 40C340 40 330 45 330 55C330 75 380 75 380 95C380 105 370 110 355 110C340 110 330 105 330 95" stroke="#0088ff" stroke-width="24" stroke-linecap="round"/>
                 <path d="M420 110V40M420 75L470 40M420 75L470 110" stroke="white" stroke-width="24" stroke-linecap="round"/>
             </svg>
         </div>
@@ -84,9 +84,9 @@
     <div id="page-menu" class="page">
         <svg class="logo-img logo-small" viewBox="0 0 500 150" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M45 40H115M80 40V110" stroke="white" stroke-width="24" stroke-linecap="round"/>
-            <path d="M140 110V40H185C205 40 215 50 215 65C215 80 205 90 185 90H140M180 90L215 110" stroke="#ff0088" stroke-width="24" stroke-linecap="round"/>
+            <path d="M140 110V40H185C205 40 215 50 215 65C215 80 205 90 185 90H140M180 90L215 110" stroke="#0088ff" stroke-width="24" stroke-linecap="round"/>
             <path d="M250 40V85C250 100 260 110 275 110C290 110 300 100 300 85V40" stroke="white" stroke-width="24" stroke-linecap="round"/>
-            <path d="M380 55C380 45 370 40 355 40C340 40 330 45 330 55C330 75 380 75 380 95C380 105 370 110 355 110C340 110 330 105 330 95" stroke="#ff0088" stroke-width="24" stroke-linecap="round"/>
+            <path d="M380 55C380 45 370 40 355 40C340 40 330 45 330 55C330 75 380 75 380 95C380 105 370 110 355 110C340 110 330 105 330 95" stroke="#0088ff" stroke-width="24" stroke-linecap="round"/>
             <path d="M420 110V40M420 75L470 40M420 75L470 110" stroke="white" stroke-width="24" stroke-linecap="round"/>
         </svg>
         <h2 id="menuWelcomeText" style="margin-bottom: 5px;">Menu</h2>
