@@ -39,7 +39,7 @@
         .btn-back { background: none; color: var(--text-sub); text-decoration: underline; margin-top: 20px; border: none; }
         .menu-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; max-width: 380px; }
         .menu-item { background: var(--bg-card); padding: 30px; border-radius: 20px; text-align: center; border: 1px solid #333; }
-        #reader { width: 100%; border-radius: 15px; overflow: hidden; background: #000; border: 1px solid #333; }
+        #reader { width: 100%; border-radius: 15px; overflow: hidden; background: #000; border: 1px solid #333; transition: border 0.2s; }
         .preview-img { width: 100%; border-radius: 12px; margin-top: 15px; display: none; border: 2px solid var(--trusk-pink); }
         .scanned-item { background: #2a2a2a; padding: 15px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; width: 100%; max-width: 380px; box-sizing: border-box;}
     </style>
@@ -114,6 +114,23 @@
             goPage('page-menu');
         }
 
+        function triggerFeedback() {
+            // 📳 Vibration (Android uniquement)
+            if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
+
+            // 🔊 Son (Fallback iPhone)
+            try {
+                const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
+                audio.volume = 0.3;
+                audio.play();
+            } catch(e) {}
+
+            // ✨ Feedback visuel (Bordure verte)
+            const reader = document.getElementById("reader");
+            reader.style.border = "3px solid #00ff88";
+            setTimeout(() => { reader.style.border = "1px solid #333"; }, 200);
+        }
+
         function previewPhoto(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
@@ -140,7 +157,7 @@
         function startScanner() {
             if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
             html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (text) => {
-                if (navigator.vibrate) navigator.vibrate(100);
+                triggerFeedback();
                 let code = text;
                 try {
                     const url = new URL(text);
@@ -155,7 +172,12 @@
 
         function renderList() {
             const list = document.getElementById("scannedList");
-            list.innerHTML = scannedData.map((c, i) => `<div class="scanned-item"><strong>${c}</strong><span style="color:#ff3333;" onclick="scannedData.splice(${i},1);renderList();">Suppr.</span></div>`).join('');
+            list.innerHTML = scannedData.map((c, i) => `
+                <div class="scanned-item">
+                    <strong>${c}</strong>
+                    <span style="color:#ff3333;" onclick="scannedData.splice(${i},1);renderList();">Suppr.</span>
+                </div>
+            `).join('');
             document.getElementById("btnSendRetour").style.display = scannedData.length > 0 ? "block" : "none";
         }
 
@@ -180,17 +202,16 @@
                 mode: "no-cors",
                 body: JSON.stringify(payload)
             }).then(() => {
-                alert("Validé et synchronisé !");
-                finalizeAction(type, btn, originalText);
+                alert("Validé !");
+                finalizeAction(btn, originalText);
             }).catch(() => {
                 saveOffline(payload);
-                alert("Mode Hors-Ligne : Données sauvegardées sur le téléphone.");
-                finalizeAction(type, btn, originalText);
+                alert("Mode Hors-Ligne : Données sauvegardées localement.");
+                finalizeAction(btn, originalText);
             });
         }
 
-        // --- FONCTION FINALIZEACTION CRUCIALE ---
-        function finalizeAction(type, btn, originalText) {
+        function finalizeAction(btn, originalText) {
             photoBase64 = "";
             const preview = document.getElementById('imgPreview');
             if(preview) preview.style.display = "none";
@@ -203,29 +224,28 @@
         }
 
         function saveOffline(payload) {
-            let offlineQueue = JSON.parse(localStorage.getItem('trusk_offline_queue') || "[]");
-            offlineQueue.push(payload);
-            localStorage.setItem('trusk_offline_queue', JSON.stringify(offlineQueue));
+            let queue = JSON.parse(localStorage.getItem('trusk_queue') || "[]");
+            queue.push(payload);
+            localStorage.setItem('trusk_queue', JSON.stringify(queue));
         }
 
-        window.addEventListener('online', syncOfflineData);
-
         function syncOfflineData() {
-            let queue = JSON.parse(localStorage.getItem('trusk_offline_queue') || "[]");
+            let queue = JSON.parse(localStorage.getItem('trusk_queue') || "[]");
             if (queue.length === 0) return;
             queue.forEach((payload, index) => {
                 fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) })
                 .then(() => {
                     queue.splice(index, 1);
-                    localStorage.setItem('trusk_offline_queue', JSON.stringify(queue));
+                    localStorage.setItem('trusk_queue', JSON.stringify(queue));
                 });
             });
         }
 
+        window.addEventListener('online', syncOfflineData);
         window.onload = () => {
             const saved = localStorage.getItem('trusk_driver');
             if(saved) document.getElementById("driverName").value = saved;
-            syncOfflineData(); // Check au démarrage
+            syncOfflineData();
         };
     </script>
 </body>
