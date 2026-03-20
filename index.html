@@ -19,32 +19,45 @@
             --bg-card: #1c1c1e; 
             --text-main: #ffffff; 
             --text-sub: #8e8e93; 
+            --status-ok: #00ff88;
+            --status-warn: #ffcc00;
         }
         
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; background: var(--bg-body); color: var(--text-main); display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         .page { display: none; padding: 20px; width: 100%; box-sizing: border-box; flex-direction: column; align-items: center; }
         .page.active { display: flex; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
         .logo-container { width: 100%; text-align: center; margin: 40px 0; }
         .logo-img { width: 220px; height: auto; } 
         .logo-small { width: 100px; margin: 10px 0 20px 0; }
+        
         .card { background: var(--bg-card); padding: 25px; border-radius: 20px; width: 100%; max-width: 380px; box-sizing: border-box; margin-bottom: 20px; }
+        
         h2 { text-align: center; margin-top: 0; font-size: 1.2rem; }
+        #counter { color: var(--trusk-pink); text-align: center; margin: 10px 0; font-weight: bold; font-size: 1.5rem; }
+        
         label { font-weight: 600; font-size: 12px; color: var(--text-sub); display: block; margin-bottom: 5px; text-transform: uppercase; }
         input, select { width: 100%; padding: 15px; margin-bottom: 20px; border: 1px solid #333; border-radius: 12px; font-size: 16px; background: #2c2c2e; color: white; box-sizing: border-box; -webkit-appearance: none; }
+        
         .btn { width: 100%; padding: 18px; border: none; border-radius: 15px; font-weight: 700; font-size: 16px; cursor: pointer; text-transform: uppercase; box-sizing: border-box; transition: 0.2s; }
         .btn:active { transform: scale(0.98); }
         .btn-pink { background: var(--trusk-pink); color: white; } 
-        .btn-outline { background: none; border: 2px solid #333; color: white; margin-top: 10px; }
         .btn-back { background: none; color: var(--text-sub); text-decoration: underline; margin-top: 20px; border: none; }
-        .menu-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; max-width: 380px; }
-        .menu-item { background: var(--bg-card); padding: 30px; border-radius: 20px; text-align: center; border: 1px solid #333; }
-        #reader { width: 100%; border-radius: 15px; overflow: hidden; background: #000; border: 1px solid #333; transition: border 0.2s; }
-        .preview-img { width: 100%; border-radius: 12px; margin-top: 15px; display: none; border: 2px solid var(--trusk-pink); }
+        
+        #reader { width: 100%; border-radius: 15px; overflow: hidden; background: #000; border: 1px solid #333; transition: 0.2s; }
         .scanned-item { background: #2a2a2a; padding: 15px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; width: 100%; max-width: 380px; box-sizing: border-box;}
+        
+        /* Toast Notification */
+        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 50px; background: rgba(0,0,0,0.8); color: white; font-weight: bold; display: none; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        
+        /* Offline Banner */
+        #offline-banner { background: var(--status-warn); color: black; width: 100%; text-align: center; padding: 5px; font-size: 12px; font-weight: bold; display: none; }
     </style>
 </head>
 <body>
+
+    <div id="offline-banner">⚠️ MODE HORS LIGNE ACTIF</div>
 
     <div id="page-login" class="page active">
         <div class="logo-container"><img src="https://github.com/romaincrabot-glitch/validation-trusk/blob/main/TRUSK_BLUE%20(1).png?raw=true" class="logo-img"></div>
@@ -67,25 +80,15 @@
         <img src="https://github.com/romaincrabot-glitch/validation-trusk/blob/main/TRUSK_BLUE%20(1).png?raw=true" class="logo-small">
         <h2 id="menuWelcomeText">Menu</h2>
         <div class="menu-grid">
-            <div class="menu-item" onclick="goPage('page-action-depart')"><span>🚚</span><br><strong>DÉPART</strong></div>
-            <div class="menu-item" onclick="goPage('page-action-retour')"><span>📦</span><br><strong>RETOUR</strong></div>
+            <button class="btn btn-pink" style="margin-bottom:15px;" onclick="goPage('page-action-depart')">🚚 DÉPART</button>
+            <button class="btn btn-pink" onclick="goPage('page-action-retour')">📦 RETOUR</button>
         </div>
         <button class="btn-back" onclick="goPage('page-login')">Changer de chauffeur</button>
     </div>
 
-    <div id="page-action-depart" class="page">
-        <h2>Photo Départ 📸</h2>
-        <div class="card">
-            <input type="file" id="photoInput" accept="image/*" capture="camera" style="display: none;" onchange="previewPhoto(this)">
-            <button class="btn btn-pink" onclick="document.getElementById('photoInput').click()">📷 Prendre Photo</button>
-            <img id="imgPreview" class="preview-img">
-        </div>
-        <button class="btn btn-pink" id="btnValidDepart" onclick="sendData('DEPART')">Valider le départ</button>
-        <button class="btn-back" onclick="goPage('page-menu')">Retour</button>
-    </div>
-
     <div id="page-action-retour" class="page">
         <h2>Scan Retour 📦</h2>
+        <h3 id="counter">0 scan(s)</h3>
         <div id="reader"></div>
         <button class="btn btn-pink" style="margin-top:15px;" onclick="startScanner()">📷 Lancer Scanner</button>
         <div id="scannedList" style="width:100%; margin-top:15px;"></div>
@@ -93,11 +96,102 @@
         <button class="btn-back" onclick="stopScanner(); goPage('page-menu')">Retour</button>
     </div>
 
+    <div id="page-action-depart" class="page">
+        <h2>Photo Départ 📸</h2>
+        <div class="card">
+            <input type="file" id="photoInput" accept="image/*" capture="camera" style="display: none;" onchange="previewPhoto(this)">
+            <button class="btn btn-pink" onclick="document.getElementById('photoInput').click()">📷 Prendre Photo</button>
+            <img id="imgPreview" style="width:100%; display:none; margin-top:15px; border-radius:12px;">
+        </div>
+        <button class="btn btn-pink" id="btnValidDepart" onclick="sendData('DEPART')">Valider le départ</button>
+        <button class="btn-back" onclick="goPage('page-menu')">Retour</button>
+    </div>
+
+    <div id="toast"></div>
+
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx9eHiFeRMZ9Zh0fO63Kb3LmgQoDEpkw12kZGdxdIPRI6ozg4y12eKqs0TEJb13Bdl-/exec";
-        let photoBase64 = "";
         let scannedData = [];
         let html5QrCode = null;
+        let photoBase64 = "";
+
+        // Logique Anti-Double Scan & Lock
+        let lastScan = "";
+        let lastScanTime = 0;
+        let scanLock = false;
+
+        function showToast(message, color = "white") {
+            const toast = document.getElementById("toast");
+            toast.innerText = message;
+            toast.style.color = color;
+            toast.style.display = "block";
+            setTimeout(() => { toast.style.display = "none"; }, 2000);
+        }
+
+        function triggerFeedback(isNew) {
+            if (navigator.vibrate) navigator.vibrate(isNew ? 100 : [50, 50, 50]);
+            const reader = document.getElementById("reader");
+            reader.style.border = isNew ? "4px solid var(--status-ok)" : "4px solid var(--status-warn)";
+            setTimeout(() => { reader.style.border = "1px solid #333"; }, 300);
+            
+            // Son de feedback
+            const audio = new Audio(isNew ? "https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg" : "https://actions.google.com/sounds/v1/foley/beeps_error_set.ogg");
+            audio.volume = 0.2;
+            audio.play().catch(()=>{});
+        }
+
+        function isDuplicate(code) {
+            const now = Date.now();
+            if (code === lastScan && now - lastScanTime < 2000) return true;
+            lastScan = code;
+            lastScanTime = now;
+            return false;
+        }
+
+        function startScanner() {
+            if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (text) => {
+                if (scanLock) return;
+                
+                let code = text;
+                try {
+                    const url = new URL(text);
+                    code = url.searchParams.get('codeEquipement') || text;
+                } catch(e) {}
+
+                // 1. Anti-double scan (boucle rapide)
+                if (isDuplicate(code)) return;
+
+                // 2. Vérification si déjà dans la liste
+                if (scannedData.includes(code)) {
+                    showToast("⚠️ Déjà scanné", "var(--status-warn)");
+                    triggerFeedback(false);
+                    return;
+                }
+
+                // 3. Validation du scan
+                scanLock = true; // Verrouille
+                scannedData.push(code);
+                renderList();
+                showToast("✅ Ajouté", "var(--status-ok)");
+                triggerFeedback(true);
+
+                // Libère après 800ms pour permettre le scan suivant
+                setTimeout(() => { scanLock = false; }, 800);
+            });
+        }
+
+        function renderList() {
+            document.getElementById("counter").innerText = scannedData.length + " scan(s)";
+            const list = document.getElementById("scannedList");
+            list.innerHTML = scannedData.map((c, i) => `
+                <div class="scanned-item">
+                    <strong>${c}</strong>
+                    <span style="color:#ff3333; font-weight:bold;" onclick="scannedData.splice(${i},1);renderList();">X</span>
+                </div>
+            `).join('');
+            document.getElementById("btnSendRetour").style.display = scannedData.length > 0 ? "block" : "none";
+        }
 
         function goPage(id) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -114,23 +208,6 @@
             goPage('page-menu');
         }
 
-        function triggerFeedback() {
-            // 📳 Vibration (Android uniquement)
-            if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
-
-            // 🔊 Son (Fallback iPhone)
-            try {
-                const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
-                audio.volume = 0.3;
-                audio.play();
-            } catch(e) {}
-
-            // ✨ Feedback visuel (Bordure verte)
-            const reader = document.getElementById("reader");
-            reader.style.border = "3px solid #00ff88";
-            setTimeout(() => { reader.style.border = "1px solid #333"; }, 200);
-        }
-
         function previewPhoto(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
@@ -145,8 +222,9 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                         photoBase64 = canvas.toDataURL('image/jpeg', 0.6);
-                        document.getElementById('imgPreview').src = photoBase64;
-                        document.getElementById('imgPreview').style.display = "block";
+                        const preview = document.getElementById('imgPreview');
+                        preview.src = photoBase64;
+                        preview.style.display = "block";
                     };
                     img.src = e.target.result;
                 };
@@ -154,38 +232,11 @@
             }
         }
 
-        function startScanner() {
-            if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-            html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (text) => {
-                triggerFeedback();
-                let code = text;
-                try {
-                    const url = new URL(text);
-                    code = url.searchParams.get('codeEquipement') || text;
-                } catch(e) {}
-                if(!scannedData.includes(code)) {
-                    scannedData.push(code);
-                    renderList();
-                }
-            });
-        }
-
-        function renderList() {
-            const list = document.getElementById("scannedList");
-            list.innerHTML = scannedData.map((c, i) => `
-                <div class="scanned-item">
-                    <strong>${c}</strong>
-                    <span style="color:#ff3333;" onclick="scannedData.splice(${i},1);renderList();">Suppr.</span>
-                </div>
-            `).join('');
-            document.getElementById("btnSendRetour").style.display = scannedData.length > 0 ? "block" : "none";
-        }
-
         function stopScanner() { if(html5QrCode) html5QrCode.stop().catch(() => {}); }
 
+        // --- GESTION ENVOI ET OFFLINE ---
         function sendData(type) {
             const btn = type === 'DEPART' ? document.getElementById('btnValidDepart') : document.getElementById('btnSendRetour');
-            const originalText = btn.innerText;
             btn.innerText = "Envoi..."; btn.disabled = true;
 
             const payload = {
@@ -197,28 +248,32 @@
                 timestamp: new Date().toISOString()
             };
 
-            fetch(SCRIPT_URL, {
-                method: "POST",
-                mode: "no-cors",
-                body: JSON.stringify(payload)
-            }).then(() => {
-                alert("Validé !");
-                finalizeAction(btn, originalText);
-            }).catch(() => {
+            if (!navigator.onLine) {
                 saveOffline(payload);
-                alert("Mode Hors-Ligne : Données sauvegardées localement.");
-                finalizeAction(btn, originalText);
+                alert("Hors ligne ! Sauvegardé sur le téléphone.");
+                finalizeAction(btn, type);
+                return;
+            }
+
+            fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) })
+            .then(() => {
+                alert("Transmis avec succès !");
+                finalizeAction(btn, type);
+            })
+            .catch(() => {
+                saveOffline(payload);
+                alert("Erreur réseau. Sauvegardé localement.");
+                finalizeAction(btn, type);
             });
         }
 
-        function finalizeAction(btn, originalText) {
-            photoBase64 = "";
-            const preview = document.getElementById('imgPreview');
-            if(preview) preview.style.display = "none";
+        function finalizeAction(btn, type) {
             scannedData = [];
+            photoBase64 = "";
+            if(type === 'DEPART') document.getElementById('imgPreview').style.display = "none";
             renderList();
             stopScanner();
-            btn.innerText = originalText;
+            btn.innerText = type === 'DEPART' ? "Valider le départ" : "Valider le déchargement";
             btn.disabled = false;
             goPage('page-menu');
         }
@@ -230,19 +285,31 @@
         }
 
         function syncOfflineData() {
+            if (!navigator.onLine) return;
             let queue = JSON.parse(localStorage.getItem('trusk_queue') || "[]");
             if (queue.length === 0) return;
-            queue.forEach((payload, index) => {
-                fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) })
+            
+            showToast("Sync en cours...", "var(--trusk-pink)");
+            queue.forEach((p, i) => {
+                fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(p) })
                 .then(() => {
-                    queue.splice(index, 1);
+                    queue.splice(i, 1);
                     localStorage.setItem('trusk_queue', JSON.stringify(queue));
                 });
             });
         }
 
-        window.addEventListener('online', syncOfflineData);
+        // Monitoring connexion
+        window.addEventListener('online', () => { 
+            document.getElementById('offline-banner').style.display = "none";
+            syncOfflineData();
+        });
+        window.addEventListener('offline', () => { 
+            document.getElementById('offline-banner').style.display = "block";
+        });
+
         window.onload = () => {
+            if (!navigator.onLine) document.getElementById('offline-banner').style.display = "block";
             const saved = localStorage.getItem('trusk_driver');
             if(saved) document.getElementById("driverName").value = saved;
             syncOfflineData();
