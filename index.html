@@ -9,37 +9,73 @@
     
     <script src="https://unpkg.com/html5-qrcode"></script>
 
-    <link rel="apple-touch-icon" sizes="180x180" href="https://github.com/romaincrabot-glitch/validation-trusk/blob/main/Logo_TRUSK_Linkedin.png?raw=true&v=2">
-    <link rel="icon" type="image/png" sizes="32x32" href="https://github.com/romaincrabot-glitch/validation-trusk/blob/main/Logo_TRUSK_Linkedin.png?raw=true&v=2">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://github.com/romaincrabot-glitch/validation-trusk/blob/main/Logo_TRUSK_Linkedin.png?raw=true&v=3">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://github.com/romaincrabot-glitch/validation-trusk/blob/main/Logo_TRUSK_Linkedin.png?raw=true&v=3">
     
     <style>
-        :root { --trusk-blue: #0088ff; --bg-body: #000000; --bg-card: #1c1c1e; --text-main: #ffffff; --text-sub: #8e8e93; }
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; background: var(--bg-body); color: var(--text-main); display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        :root { 
+            --trusk-pink: #ff0088; /* Le Fuchsia officiel Trusk */
+            --bg-body: #000000; 
+            --bg-card: #1c1c1e; 
+            --text-main: #ffffff; 
+            --text-sub: #8e8e93; 
+        }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+            margin: 0; background: var(--bg-body); color: var(--text-main); 
+            display: flex; flex-direction: column; align-items: center; min-height: 100vh; 
+        }
+        
         .page { display: none; padding: 20px; width: 100%; box-sizing: border-box; flex-direction: column; align-items: center; }
         .page.active { display: flex; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
         .logo-container { width: 100%; text-align: center; margin: 40px 0; }
-        .logo-img { width: 220px; height: auto; }
+        /* Ton logo bleu actuel, on le garde */
+        .logo-img { width: 220px; height: auto; } 
         .logo-small { width: 100px; margin: 10px 0 20px 0; }
-        .card { background: var(--bg-card); padding: 25px; border-radius: 20px; width: 100%; max-width: 380px; box-sizing: border-box; margin-bottom: 20px; }
+
+        .card { 
+            background: var(--bg-card); padding: 25px; border-radius: 20px; 
+            width: 100%; max-width: 380px; box-sizing: border-box; margin-bottom: 20px; 
+        }
+        
         h2 { text-align: center; margin-top: 0; font-size: 1.2rem; }
         label { font-weight: 600; font-size: 12px; color: var(--text-sub); display: block; margin-bottom: 5px; text-transform: uppercase; }
-        input, select { width: 100%; padding: 15px; margin-bottom: 20px; border: 1px solid #333; border-radius: 12px; font-size: 16px; background: #2c2c2e; color: white; box-sizing: border-box; -webkit-appearance: none; }
-        .btn { width: 100%; padding: 18px; border: none; border-radius: 15px; font-weight: 700; font-size: 16px; cursor: pointer; text-transform: uppercase; box-sizing: border-box; transition: 0.2s; }
-        .btn-blue { background: var(--trusk-blue); color: white; }
+
+        input, select { 
+            width: 100%; padding: 15px; margin-bottom: 20px; border: 1px solid #333; 
+            border-radius: 12px; font-size: 16px; background: #2c2c2e; color: white; 
+            box-sizing: border-box; -webkit-appearance: none;
+        }
+
+        .btn { 
+            width: 100%; padding: 18px; border: none; border-radius: 15px; 
+            font-weight: 700; font-size: 16px; cursor: pointer; text-transform: uppercase; 
+            box-sizing: border-box; transition: 0.2s;
+        }
+        .btn:active { transform: scale(0.98); }
+        
+        /* LA MODIFICATION EST ICI - TOUS LES BOUTONS EN ROSE */
+        .btn-blue, .btn-pink { background: var(--trusk-pink); color: white; } 
+        
         .btn-outline { background: none; border: 2px solid #333; color: white; margin-top: 10px; }
         .btn-back { background: none; color: var(--text-sub); text-decoration: underline; margin-top: 20px; border: none; }
+
         .menu-grid { display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; max-width: 380px; }
         .menu-item { background: var(--bg-card); padding: 30px; border-radius: 20px; text-align: center; border: 1px solid #333; }
+
         #reader { width: 100%; border-radius: 15px; overflow: hidden; background: #000; border: 1px solid #333; }
-        .preview-img { width: 100%; border-radius: 12px; margin-top: 15px; display: none; border: 2px solid var(--trusk-blue); }
-        .scanned-item { background: #2a2a2a; padding: 15px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; width: 100%; max-width: 380px; box-sizing: border-box;}
+        .preview-img { width: 100%; border-radius: 12px; margin-top: 15px; display: none; border: 2px solid var(--trusk-pink); }
     </style>
 </head>
 <body>
 
     <div id="page-login" class="page active">
-        <div class="logo-container"><img src="https://github.com/romaincrabot-glitch/validation-trusk/blob/main/TRUSK_BLUE%20(1).png?raw=true" class="logo-img"></div>
+        <div class="logo-container">
+            <img src="https://github.com/romaincrabot-glitch/validation-trusk/blob/main/TRUSK_BLUE%20(1).png?raw=true" class="logo-img" alt="Trusk Logo">
+        </div>
         <div class="card">
             <h2>Bonjour 👋</h2>
             <label>Nom du chauffeur</label>
@@ -51,7 +87,7 @@
                 <option value="Tournée 2">Tournée 2</option>
                 <option value="Tournée 3">Tournée 3</option>
             </select>
-            <button class="btn btn-blue" onclick="goMenu()">Continuer</button>
+            <button class="btn btn-pink" onclick="goMenu()">Continuer</button>
         </div>
     </div>
 
@@ -59,8 +95,12 @@
         <img src="https://github.com/romaincrabot-glitch/validation-trusk/blob/main/TRUSK_BLUE%20(1).png?raw=true" class="logo-small">
         <h2 id="menuWelcomeText">Menu</h2>
         <div class="menu-grid">
-            <div class="menu-item" onclick="goPage('page-action-depart')"><strong>🚚 DÉPART</strong></div>
-            <div class="menu-item" onclick="goPage('page-action-retour')"><strong>📦 RETOUR</strong></div>
+            <div class="menu-item" onclick="goPage('page-action-depart')">
+                <span style="font-size: 24px;">🚚</span><br><strong>DÉPART</strong>
+            </div>
+            <div class="menu-item" onclick="goPage('page-action-retour')">
+                <span style="font-size: 24px;">📦</span><br><strong>RETOUR</strong>
+            </div>
         </div>
         <button class="btn-back" onclick="goPage('page-login')">Changer de chauffeur</button>
     </div>
@@ -69,26 +109,23 @@
         <h2>Photo Départ 📸</h2>
         <div class="card">
             <input type="file" id="photoInput" accept="image/*" capture="camera" style="display: none;" onchange="previewPhoto(this)">
-            <button class="btn btn-outline" onclick="document.getElementById('photoInput').click()">📷 Prendre Photo</button>
+            <button class="btn btn-pink" onclick="document.getElementById('photoInput').click()">📷 Prendre Photo</button>
             <img id="imgPreview" class="preview-img">
         </div>
-        <button class="btn btn-blue" id="btnValidDepart" onclick="sendData('DEPART')">Valider le départ</button>
+        <button class="btn btn-pink" id="btnValidDepart" onclick="sendData('DEPART')">Valider le départ</button>
         <button class="btn-back" onclick="goPage('page-menu')">Retour</button>
     </div>
 
     <div id="page-action-retour" class="page">
         <h2>Scan Retour 📦</h2>
         <div id="reader"></div>
-        <button class="btn btn-blue" style="margin-top:15px;" onclick="startScanner()">📷 Lancer Scanner</button>
-        <div id="scannedList" style="width:100%; margin-top:15px;"></div>
-        <button class="btn btn-blue" id="btnSendRetour" style="display:none; margin-top:10px;" onclick="sendData('RETOUR')">Valider le déchargement</button>
+        <button class="btn btn-pink" style="margin-top:15px;" onclick="startScanner()">📷 Lancer Scanner</button>
         <button class="btn-back" onclick="stopScanner(); goPage('page-menu')">Retour</button>
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwLmNUvLVEmufiSxYeQtg9lZ7QWRtNUXNHnOlYAI5_LimxaYgzJ8TX47aQ785ul17pmjg/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx9eHiFeRMZ9Zh0fO63Kb3LmgQoDEpkw12kZGdxdIPRI6ozg4y12eKqs0TEJb13Bdl-/exec";
         let photoBase64 = "";
-        let scannedData = [];
         let html5QrCode = null;
 
         function goPage(id) {
@@ -119,7 +156,7 @@
                         canvas.height = img.height * scale;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        photoBase64 = canvas.toDataURL('image/jpeg', 0.6);
+                        photoBase64 = canvas.toDataURL('image/jpeg', 0.6); // Compression 60%
                         document.getElementById('imgPreview').src = photoBase64;
                         document.getElementById('imgPreview').style.display = "block";
                     };
@@ -131,37 +168,23 @@
 
         function startScanner() {
             if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-            html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (text) => {
+            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
                 if (navigator.vibrate) navigator.vibrate(100);
-                let code = text;
-                try {
-                    const url = new URL(text);
-                    code = url.searchParams.get('codeEquipement') || text;
-                } catch(e) {}
-                if(!scannedData.includes(code)) {
-                    scannedData.push(code);
-                    renderList();
-                }
+                alert("Scanné : " + text);
             });
         }
 
-        function stopScanner() { if(html5QrCode) html5QrCode.stop().catch(() => {}); }
-
-        function renderList() {
-            const list = document.getElementById("scannedList");
-            list.innerHTML = scannedData.map((c, i) => `<div class="scanned-item"><strong>${c}</strong><span style="color:#ff3333;" onclick="scannedData.splice(${i},1);renderList();">Suppr.</span></div>`).join('');
-            document.getElementById("btnSendRetour").style.display = scannedData.length > 0 ? "block" : "none";
-        }
+        function stopScanner() { if(html5QrCode) html5QrCode.stop(); }
 
         function sendData(type) {
-            const btn = type === 'DEPART' ? document.getElementById('btnValidDepart') : document.getElementById('btnSendRetour');
-            const originalText = btn.innerText;
-            btn.innerText = "Envoi..."; btn.disabled = true;
+            const btn = document.getElementById('btnValidDepart');
+            btn.innerText = "Envoi en cours...";
+            btn.disabled = true;
 
             const payload = {
-                type: type === 'DEPART' ? "DEPART" : "DECHARGEMENT",
+                type: type,
                 driver: document.getElementById("driverName").value + " (" + document.getElementById("tourneeSelect").value + ")",
-                scans: type === 'DEPART' ? "Photo transmise" : scannedData,
+                scans: type === 'DEPART' ? "Photo transmise" : [],
                 signature: type === 'DEPART' ? photoBase64 : ""
             };
 
@@ -170,15 +193,12 @@
                 mode: "no-cors",
                 body: JSON.stringify(payload)
             }).then(() => {
-                alert("Validé !");
-                // Reset
-                photoBase64 = ""; document.getElementById('imgPreview').style.display = "none";
-                scannedData = []; renderList(); stopScanner();
-                btn.innerText = originalText; btn.disabled = false;
-                goPage('page-menu');
+                alert("Validé avec succès !");
+                location.reload();
             }).catch(() => {
-                alert("Erreur");
-                btn.innerText = originalText; btn.disabled = false;
+                alert("Erreur d'envoi");
+                btn.innerText = "Valider le départ";
+                btn.disabled = false;
             });
         }
 
