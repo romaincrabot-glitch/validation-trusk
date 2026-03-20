@@ -48,10 +48,7 @@
         #reader { width: 100%; border-radius: 15px; overflow: hidden; background: #000; border: 1px solid #333; transition: 0.2s; }
         .scanned-item { background: #2a2a2a; padding: 15px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; width: 100%; max-width: 380px; box-sizing: border-box;}
         
-        /* Toast Notification */
         #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 50px; background: rgba(0,0,0,0.8); color: white; font-weight: bold; display: none; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        
-        /* Offline Banner */
         #offline-banner { background: var(--status-warn); color: black; width: 100%; text-align: center; padding: 5px; font-size: 12px; font-weight: bold; display: none; }
     </style>
 </head>
@@ -110,12 +107,13 @@
     <div id="toast"></div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx9eHiFeRMZ9Zh0fO63Kb3LmgQoDEpkw12kZGdxdIPRI6ozg4y12eKqs0TEJb13Bdl-/exec";
+        // LIEN MIS À JOUR CI-DESSOUS
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbZmsUFdw80kK37fyJWJgKh35BQrVhj6gr_MPMm53yq8p3vo8Chg5wvzc-UCh0yQcyU/exec";
+        
         let scannedData = [];
         let html5QrCode = null;
         let photoBase64 = "";
 
-        // Logique Anti-Double Scan & Lock
         let lastScan = "";
         let lastScanTime = 0;
         let scanLock = false;
@@ -134,7 +132,6 @@
             reader.style.border = isNew ? "4px solid var(--status-ok)" : "4px solid var(--status-warn)";
             setTimeout(() => { reader.style.border = "1px solid #333"; }, 300);
             
-            // Son de feedback
             const audio = new Audio(isNew ? "https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg" : "https://actions.google.com/sounds/v1/foley/beeps_error_set.ogg");
             audio.volume = 0.2;
             audio.play().catch(()=>{});
@@ -159,24 +156,20 @@
                     code = url.searchParams.get('codeEquipement') || text;
                 } catch(e) {}
 
-                // 1. Anti-double scan (boucle rapide)
                 if (isDuplicate(code)) return;
 
-                // 2. Vérification si déjà dans la liste
                 if (scannedData.includes(code)) {
                     showToast("⚠️ Déjà scanné", "var(--status-warn)");
                     triggerFeedback(false);
                     return;
                 }
 
-                // 3. Validation du scan
-                scanLock = true; // Verrouille
+                scanLock = true;
                 scannedData.push(code);
                 renderList();
                 showToast("✅ Ajouté", "var(--status-ok)");
                 triggerFeedback(true);
 
-                // Libère après 800ms pour permettre le scan suivant
                 setTimeout(() => { scanLock = false; }, 800);
             });
         }
@@ -234,7 +227,6 @@
 
         function stopScanner() { if(html5QrCode) html5QrCode.stop().catch(() => {}); }
 
-        // --- GESTION ENVOI ET OFFLINE ---
         function sendData(type) {
             const btn = type === 'DEPART' ? document.getElementById('btnValidDepart') : document.getElementById('btnSendRetour');
             btn.innerText = "Envoi..."; btn.disabled = true;
@@ -299,7 +291,6 @@
             });
         }
 
-        // Monitoring connexion
         window.addEventListener('online', () => { 
             document.getElementById('offline-banner').style.display = "none";
             syncOfflineData();
