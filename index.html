@@ -229,8 +229,9 @@
 
         function sendData(type) {
             const btn = type === 'DEPART' ? document.getElementById('btnValidDepart') : document.getElementById('btnSendRetour');
+            const originalText = btn.innerText;
             btn.innerText = "Envoi..."; btn.disabled = true;
-
+        
             const payload = {
                 type: type === 'DEPART' ? "DEPART" : "DECHARGEMENT",
                 driver: document.getElementById("driverName").value,
@@ -239,22 +240,33 @@
                 signature: type === 'DEPART' ? photoBase64 : "",
                 timestamp: new Date().toISOString()
             };
-
-            if (!navigator.onLine) {
-                saveOffline(payload);
-                alert("Hors ligne ! Sauvegardé sur le téléphone.");
-                finalizeAction(btn, type);
+        
+            // Vérification de sécurité avant envoi
+            if (type === 'RETOUR' && scannedData.length === 0) {
+                alert("Erreur : Aucun scan à envoyer !");
+                btn.innerText = originalText; btn.disabled = false;
                 return;
             }
-
-            fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) })
-            .then(() => {
-                alert("Transmis avec succès !");
-                finalizeAction(btn, type);
+        
+            // ON PASSE EN MODE CORS POUR VOIR LES ERREURS
+            fetch(SCRIPT_URL, {
+                method: "POST",
+                mode: "cors", // Changé ici
+                body: JSON.stringify(payload)
             })
-            .catch(() => {
-                saveOffline(payload);
-                alert("Erreur réseau. Sauvegardé localement.");
+            .then(response => {
+                if (response.ok) {
+                    alert("✅ Serveur a reçu les données !");
+                    finalizeAction(btn, type);
+                } else {
+                    alert("❌ Erreur Serveur : " + response.status);
+                    btn.innerText = originalText; btn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                saveOffline(payload); // On garde la sécurité offline
+                alert("📡 Erreur Réseau ou Script : " + error.message);
                 finalizeAction(btn, type);
             });
         }
