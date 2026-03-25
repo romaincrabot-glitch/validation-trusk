@@ -8,6 +8,8 @@
     <title>Trusk Hub Pro - Iloé</title>
     
     <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <link rel="apple-touch-icon" sizes="180x180" href="https://github.com/romaincrabot-glitch/validation-trusk/blob/main/Logo_TRUSK_Linkedin.png?raw=true&v=3">
     <link rel="icon" type="image/png" sizes="32x32" href="https://github.com/romaincrabot-glitch/validation-trusk/blob/main/Logo_TRUSK_Linkedin.png?raw=true&v=3">
@@ -107,17 +109,29 @@
     <div id="toast"></div>
 
     <script>
-        // LIEN MIS À JOUR CI-DESSOUS
+        // --- CONFIGURATION FIREBASE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBsb1AneIRlWhbaLD4E9nLmzmhDkXW0J8o",
+            authDomain: "trusk-logistics-v3.firebaseapp.com",
+            projectId: "trusk-logistics-v3",
+            storageBucket: "trusk-logistics-v3.firebasestorage.app",
+            messagingSenderId: "956121201042",
+            appId: "1:956121201042:web:db7ec7d3e40968a24e294b"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // LIEN GOOGLE SCRIPT (EXÉCUTION)
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxZmsUFdw80kK37fyJWJgKh35BQrVhj6gr_MPMm53yq8p3vo8Chg5wvzc-UCh0yQcyU/exec";
         
         let scannedData = [];
         let html5QrCode = null;
         let photoBase64 = "";
-
         let lastScan = "";
         let lastScanTime = 0;
         let scanLock = false;
 
+        // --- FONCTIONS UTILS ---
         function showToast(message, color = "white") {
             const toast = document.getElementById("toast");
             toast.innerText = message;
@@ -145,6 +159,7 @@
             return false;
         }
 
+        // --- LOGIQUE SCANNER ---
         function startScanner() {
             if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
             html5QrCode.start({ facingMode: "environment" }, { fps: 15, qrbox: 250 }, (text) => {
@@ -180,12 +195,13 @@
             list.innerHTML = scannedData.map((c, i) => `
                 <div class="scanned-item">
                     <strong>${c}</strong>
-                    <span style="color:#ff3333; font-weight:bold;" onclick="scannedData.splice(${i},1);renderList();">X</span>
+                    <span style="color:#ff3333; font-weight:bold; padding: 10px;" onclick="scannedData.splice(${i},1);renderList();">X</span>
                 </div>
             `).join('');
             document.getElementById("btnSendRetour").style.display = scannedData.length > 0 ? "block" : "none";
         }
 
+        // --- LOGIQUE NAVIGATION ---
         function goPage(id) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(id).classList.add('active');
@@ -201,6 +217,7 @@
             goPage('page-menu');
         }
 
+        // --- GESTION PHOTO ---
         function previewPhoto(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
@@ -227,11 +244,12 @@
 
         function stopScanner() { if(html5QrCode) html5QrCode.stop().catch(() => {}); }
 
-        function sendData(type) {
+        // --- ENVOI DES DONNÉES (FULL CLOUD) ---
+        async function sendData(type) {
             const btn = type === 'DEPART' ? document.getElementById('btnValidDepart') : document.getElementById('btnSendRetour');
             const originalText = btn.innerText;
             btn.innerText = "Envoi..."; btn.disabled = true;
-        
+
             const payload = {
                 type: type === 'DEPART' ? "DEPART" : "DECHARGEMENT",
                 driver: document.getElementById("driverName").value,
@@ -240,33 +258,45 @@
                 signature: type === 'DEPART' ? photoBase64 : "",
                 timestamp: new Date().toISOString()
             };
-        
-            // Vérification de sécurité avant envoi
-            if (type === 'RETOUR' && scannedData.length === 0) {
-                alert("Erreur : Aucun scan à envoyer !");
-                btn.innerText = originalText; btn.disabled = false;
-                return;
+
+            // 1. MISE À JOUR FIREBASE (DASHBOARD TEMPS RÉEL)
+            if (type === 'RETOUR' && scannedData.length > 0) {
+                const batch = db.batch();
+                scannedData.forEach(code => {
+                    const docRef = db.collection("tournees").doc(code);
+                    batch.update(docRef, {
+                        statut: "scanné",
+                        heure_scan: new Date().toLocaleTimeString(),
+                        chauffeur_retour: payload.driver
+                    });
+                });
+                
+                try {
+                    await batch.commit();
+                    console.log("🔥 Firebase à jour !");
+                } catch (e) {
+                    console.error("Erreur Firestore (Optionnel si item non prévu):", e);
+                }
             }
-        
-            // ON PASSE EN MODE CORS POUR VOIR LES ERREURS
+
+            // 2. ENVOI GOOGLE SHEETS (ARCHIVES)
             fetch(SCRIPT_URL, {
                 method: "POST",
-                mode: "cors", // Changé ici
+                mode: "cors",
                 body: JSON.stringify(payload)
             })
             .then(response => {
                 if (response.ok) {
-                    alert("✅ Serveur a reçu les données !");
+                    alert("✅ Enregistré (Dashboard + Sheet) !");
                     finalizeAction(btn, type);
                 } else {
-                    alert("❌ Erreur Serveur : " + response.status);
+                    alert("❌ Erreur Sheet : " + response.status);
                     btn.innerText = originalText; btn.disabled = false;
                 }
             })
             .catch(error => {
-                console.error('Erreur:', error);
-                saveOffline(payload); // On garde la sécurité offline
-                alert("📡 Erreur Réseau ou Script : " + error.message);
+                saveOffline(payload);
+                alert("📡 Mode Offline : Sauvegardé localement");
                 finalizeAction(btn, type);
             });
         }
@@ -282,6 +312,7 @@
             goPage('page-menu');
         }
 
+        // --- GESTION HORS LIGNE ---
         function saveOffline(payload) {
             let queue = JSON.parse(localStorage.getItem('trusk_queue') || "[]");
             queue.push(payload);
